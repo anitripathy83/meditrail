@@ -1,0 +1,222 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>MediTrail – check your medicine</title>
+  <meta name="description" content="Scan a medicine box and see, from the blockchain, whether it is genuine, kept cold and safe to use.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%230e7c66'/><path d='M13 7h6v6h6v6h-6v6h-6v-6H7v-6h6z' fill='white'/></svg>">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="top">
+    <div class="brand">
+      <div class="logo" aria-hidden="true">+</div>
+      <div>
+        <div class="brand-name">MediTrail</div>
+        <div class="brand-sub">Proof, not promises, for every medicine box</div>
+      </div>
+    </div>
+    <nav class="tabs" aria-label="Sections">
+      <button class="tab active" data-view="check">Check a box</button>
+      <button class="tab" data-view="company">Company</button>
+      <button class="tab" data-view="sensor">Sensor</button>
+      <button class="tab" data-view="admin">Regulator</button>
+    </nav>
+  </header>
+  <div class="banner demo">Hackathon demo on the Base Sepolia test network. Fictional companies and medicines; no real or personal data.</div>
+  <div id="config-warning" class="banner warn" hidden></div>
+
+  <main>
+    <!-- ============================== CHECK (public) ============================== -->
+    <section id="view-check" class="view">
+      <h1>Is this medicine safe?</h1>
+      <p class="lead">Type or scan the code on the box. No wallet or account needed.</p>
+      <form id="check-form" class="row">
+        <label class="sr" for="check-id">Box code</label>
+        <input id="check-id" placeholder="e.g. INS-0001" autocomplete="off" autocapitalize="characters" required>
+        <button class="primary" type="submit">Check</button>
+      </form>
+      <div id="check-result" aria-live="polite"></div>
+    </section>
+
+    <!-- ============================== COMPANY ============================== -->
+    <section id="view-company" class="view" hidden>
+      <h1>Company</h1>
+      <p class="lead">Manufacturers, distributors and pharmacies record each step with their own wallet. The contract decides what is allowed.</p>
+      <div class="wallet-slot"></div>
+
+      <div class="card" id="card-register">
+        <h2>1. Register a box <span class="tag">Manufacturer</span></h2>
+        <form id="reg-form">
+          <div class="grid">
+            <label class="field">Box code<input id="reg-id" placeholder="INS-0001" required></label>
+            <label class="field">Batch<input id="reg-batch" placeholder="B-2611" required></label>
+            <label class="field">Medicine<input id="reg-name" value="Insulin glargine 100 U/ml (demo)" required></label>
+            <label class="field">Expiry date<input id="reg-expiry" type="date" required></label>
+            <label class="field">Attached sensor<select id="reg-sensor" required></select></label>
+            <label class="field">Batch certificate (PDF, stays with you)<input id="reg-cert" type="file"></label>
+          </div>
+          <p class="hint" id="reg-cert-hash">Only the certificate's fingerprint goes on the blockchain.</p>
+          <div class="actions"><button class="primary" type="submit">Register box</button></div>
+        </form>
+        <div id="reg-msg"></div>
+        <div id="reg-qr"></div>
+      </div>
+
+      <div class="card" id="card-offer">
+        <h2>2. Hand a box over <span class="tag">Current holder</span></h2>
+        <p class="hint">Pick the next company. The page creates a one-time seal code: put it inside the tamper seal. Only someone holding the box can read it.</p>
+        <form id="offer-form">
+          <div class="grid">
+            <label class="field">Box code<input id="offer-id" placeholder="INS-0001" required></label>
+            <label class="field">Hand over to<select id="offer-to" required></select></label>
+          </div>
+          <label class="field">Note (optional)<input id="offer-note" placeholder="e.g. Cold box sealed, truck DXB-12 (demo)"></label>
+          <div class="actions"><button class="primary" type="submit">Create seal code and hand over</button></div>
+        </form>
+        <div id="offer-msg"></div>
+        <div id="offer-seal"></div>
+      </div>
+
+      <div class="card" id="card-accept">
+        <h2>3. Receive a box <span class="tag">Next company</span></h2>
+        <p class="hint">Open the tamper seal and type the code you find inside. A wrong code, or the wrong company, is refused.</p>
+        <form id="accept-form">
+          <div class="grid">
+            <label class="field">Box code<input id="accept-id" placeholder="INS-0001" required></label>
+            <label class="field">Seal code<input id="accept-code" placeholder="e.g. 7K4P-Q9TX" autocomplete="off" autocapitalize="characters" required></label>
+          </div>
+          <div class="actions"><button class="primary" type="submit">Accept box</button></div>
+          <details>
+            <summary>Something wrong with the delivery? Reject it</summary>
+            <label class="field">Reason<input id="reject-reason" placeholder="e.g. Tamper seal was broken"></label>
+            <div class="actions"><button type="button" class="danger" id="reject-btn">Reject delivery</button></div>
+          </details>
+        </form>
+        <div id="accept-msg"></div>
+      </div>
+
+      <div class="card" id="card-sell">
+        <h2>4. Sell to a customer <span class="tag">Pharmacy</span></h2>
+        <p class="hint">Each box can be sold once. If the same code turns up again, the check page warns it may be a copy. No customer data is stored.</p>
+        <form id="sell-form" class="row">
+          <input id="sell-id" placeholder="INS-0001" required aria-label="Box code">
+          <button class="primary" type="submit">Sell box</button>
+        </form>
+        <div id="sell-msg"></div>
+      </div>
+
+      <details class="card">
+        <summary>More: corrections and recalls</summary>
+        <form id="corr-form">
+          <h2 class="sub">Add a correction</h2>
+          <p class="hint">Mistakes are fixed by adding a new entry. The old entry stays visible.</p>
+          <div class="grid">
+            <label class="field">Box code<input id="corr-id" placeholder="INS-0001" required></label>
+            <label class="field">Correction<input id="corr-note" placeholder="e.g. Truck was DXB-21, not DXB-12" required></label>
+          </div>
+          <div class="actions"><button type="submit">Add correction</button></div>
+        </form>
+        <div id="corr-msg"></div>
+        <form id="recall-form">
+          <h2 class="sub">Recall a whole batch <span class="tag">Manufacturer or regulator</span></h2>
+          <div class="grid">
+            <label class="field">Batch<input id="recall-batch" placeholder="B-2611" required></label>
+            <label class="field">Reason<input id="recall-reason" placeholder="e.g. Failed lab retest" required></label>
+          </div>
+          <div class="actions"><button type="submit" class="danger">Recall batch</button></div>
+        </form>
+        <div id="recall-msg"></div>
+      </details>
+
+      <div class="card">
+        <h2>Boxes you hold or are waiting for</h2>
+        <div id="my-boxes" class="hint">Connect your wallet to see them.</div>
+      </div>
+
+      <div class="card">
+        <h2>Proof of this session</h2>
+        <p class="hint">Every step you sign here, with its transaction on the block explorer. Use two of these for the submission form.</p>
+        <ol id="txlog" class="txlog"><li class="hint">Nothing yet.</li></ol>
+      </div>
+    </section>
+
+    <!-- ============================== SENSOR (simulated) ============================== -->
+    <section id="view-sensor" class="view" hidden>
+      <h1>Cold-box sensor <span class="tag">Simulation</span></h1>
+      <p class="lead">In real life a sealed data logger signs each temperature reading with a key built into the device. Here the browser plays that logger. The carrier can pass readings on, but cannot change them: the contract checks the sensor's signature.</p>
+      <div class="card">
+        <h2>Sensor identity</h2>
+        <p>Sensor address: <span id="sensor-addr" class="mono"></span> <span id="sensor-status"></span></p>
+        <p class="hint">The regulator must approve this address as a Sensor before boxes can use it. The key lives only in this browser (demo only).</p>
+        <div class="actions">
+          <button type="button" id="sensor-copy">Copy address</button>
+          <button type="button" id="sensor-new">Use a new sensor key</button>
+        </div>
+      </div>
+      <div class="card">
+        <h2>Sign a reading</h2>
+        <form id="sensor-form">
+          <label class="field">Box code<input id="sensor-box" placeholder="INS-0001" required></label>
+          <label class="field">Temperature: <output id="sensor-temp-out">5.0 °C</output>
+            <input id="sensor-temp" type="range" min="-5" max="15" step="0.1" value="5.0">
+          </label>
+          <div class="actions">
+            <button type="button" data-temp="4.6">Normal 4.6 °C</button>
+            <button type="button" data-temp="11.2" class="danger">Heat 11.2 °C</button>
+            <button type="button" data-temp="0.5" class="danger">Frozen 0.5 °C</button>
+          </div>
+          <div class="actions"><button class="primary" type="submit">Sign and send reading</button></div>
+        </form>
+        <p class="hint">Sending needs a connected company wallet (usually the carrier holding the box) to pay the tiny test fee. The sensor itself never needs funds.</p>
+        <div class="wallet-slot"></div>
+        <div id="sensor-msg"></div>
+      </div>
+    </section>
+
+    <!-- ============================== REGULATOR ============================== -->
+    <section id="view-admin" class="view" hidden>
+      <h1>Regulator</h1>
+      <p class="lead">The health regulator decides which companies and sensors may act, and until when. Every approval is public.</p>
+      <div class="wallet-slot"></div>
+      <div class="card">
+        <h2>Approve a company or sensor</h2>
+        <form id="member-form">
+          <div class="grid">
+            <label class="field">Wallet address<input id="member-wallet" placeholder="0x…" required></label>
+            <label class="field">Role
+              <select id="member-role">
+                <option value="1">Manufacturer</option>
+                <option value="2">Distributor</option>
+                <option value="3">Pharmacy</option>
+                <option value="4">Sensor</option>
+                <option value="0">Remove approval</option>
+              </select>
+            </label>
+            <label class="field">Name<input id="member-name" placeholder="e.g. Al Noor Pharmacy (demo)"></label>
+            <label class="field">Licence valid until<input id="member-until" type="date"></label>
+          </div>
+          <div class="actions"><button class="primary" type="submit">Save approval</button></div>
+        </form>
+        <div id="member-msg"></div>
+      </div>
+      <div class="card">
+        <h2>Approved companies and sensors</h2>
+        <div id="member-list" class="hint">Loading…</div>
+      </div>
+      <div class="card">
+        <h2>All boxes</h2>
+        <div id="box-list" class="hint">Loading…</div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="foot">
+    <span>MediTrail · HASH IT OUT 2026 · Track 2: Supply Chain</span>
+    <span id="contract-link"></span>
+  </footer>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>

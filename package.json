@@ -1,0 +1,16 @@
+{
+  "name": "meditrail",
+  "private": true,
+  "description": "Dev tools only: compile the contract and run the browser end-to-end test. The website itself needs no npm.",
+  "scripts": {
+    "compile": "node tools/compile.js contracts/MediTrail.sol build.json",
+    "e2e": "node tools/e2e.js",
+    "serve": "npx --yes http-server web -p 8080 -c-1"
+  },
+  "devDependencies": {
+    "ethers": "^6.13.0",
+    "ganache": "^7.9.2",
+    "playwright-core": "^1.48.0",
+    "solc": "0.8.24"
+  }
+}
