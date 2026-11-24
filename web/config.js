@@ -5,7 +5,7 @@
 //   index.html?contract=0xYourAddress
 // ---------------------------------------------------------------------------
 export const CONFIG = {
-  // TODO after deploying: e.g. "0x1234...abcd"
+  // Deployed on Base Sepolia, 24 Nov 2026
   contractAddress: "0x93d65cDAFeA8856608d2Ce1eB05326A5C159EF87",
 
   // Base Sepolia test network
