@@ -1,19 +1,24 @@
 # Demo day: setup and the 5-minute pitch
 
-## Before the pitch (do this the evening before)
+## Demo state on Base Sepolia (set up 24 Nov 2026)
 
-- [ ] Contract deployed on Base Sepolia, address in `web/config.js`, site live at https://meditrail-s4rc.onrender.com.
-- [ ] Regulator approved: Gulf Pharma Labs (manufacturer), Desert Logistics (distributor), Al Noor Pharmacy (pharmacy), and the sensor address shown in the Sensor tab of the laptop that will sign readings.
-- [ ] Every company wallet has test ETH.
-- [ ] Prepared boxes (batch `B-2611`, certificate `certificate-B-2611.pdf` attached):
-  - `INS-0001`: full journey done, **not yet sold**, three normal readings (for "Genuine and safe").
-  - `INS-0002`: registered and **offered to the distributor**, seal code written on a card (for the live refusals).
-  - `INS-0004`: **sold** already (for "Already sold once").
-  - `INS-0003` in batch `B-2700` (to recall live, or already recalled).
+Contract `0x93d65cDAFeA8856608d2Ce1eB05326A5C159EF87`. Approved: Gulf Pharma Labs (manufacturer), Desert Logistics
+(distributor), Al Noor Pharmacy (pharmacy), sensors S-01 (`0x43cf…3A2F`, key not on the demo laptop) and S-02
+(`0x189F…E8e3`, key in the demo laptop's browser: run the demo from that Chrome profile).
+
+| Box | Batch | Sensor | State | Used for |
+|---|---|---|---|---|
+| `INS-0001` | B-2611 | S-01 | At Al Noor Pharmacy, not sold | "Genuine and safe" + certificate match |
+| `INS-0002` | B-2611 | S-01 | Offered to Desert Logistics | Live refusals: wrong wallet, wrong seal, then accept |
+| `INS-0003` | B-2700 | S-01 | With Desert Logistics | Live recall of batch B-2700 |
+| `INS-0004` | B-2611 | S-01 | Sold | "Already sold once" (copied code) |
+| `INS-0005` | B-2611 | S-02 | With Desert Logistics, 3 normal readings | Live heat breach, then blocked hand-over |
+
+Seal codes are on paper only (never in this repo). Certificate: `certificate-B-2611.pdf`; edited copy: `certificate-EDITED.pdf`.
+
+- [ ] MetaMask Base Sepolia RPC set to `https://base-sepolia-rpc.publicnode.com` (the default public RPC rate-limits).
+- [ ] Every wallet has a little test ETH (Coinbase CDP faucet).
 - [ ] QR labels for `INS-0001` and `INS-0004` printed from the published site.
-- [ ] A copy of the certificate with one word changed (`certificate-EDITED.pdf`).
-- [ ] Two laptops: one with the distributor wallet (+ sensor tab), one with the pharmacy wallet. A phone for the check page.
-- [ ] Save the two transaction hashes for the form: register `INS-0001` and accept `INS-0001` with its seal code.
 
 ## Pitch (aim for 4:30)
 
@@ -23,7 +28,7 @@
    1. Phone scans `INS-0001` → **Genuine and safe**, signed journey, temperature chart.
    2. Pharmacy laptop tries to accept `INS-0002` → **refused: This box was not offered to you** (wrong wallet).
    3. Distributor types a wrong seal code → **refused: Seal code does not match**. Then the real code from the card → accepted, proof link.
-   4. Sensor tab: tap **Heat 11.2 °C** for `INS-0002` → box blocked. Distributor tries to hand it to the pharmacy → **refused**. Phone check → red **Do not use**.
+   4. Sensor tab: tap **Heat 11.2 °C** for `INS-0005` → box blocked. Distributor tries to hand it to the pharmacy → **refused**. Phone check `INS-0005` → red **Do not use**.
    5. On the phone, choose the real certificate → *Matches*; the edited one → *Does not match*.
    6. Scan `INS-0004` → **Already sold once**: this is how copied codes are caught.
    7. (If time) Recall batch `B-2700` in one click → every box in it turns red.
