@@ -1,6 +1,6 @@
 # MediTrail – one-page note
 
-*Fill in the three [brackets] after deploying.*
+*Fill in the contract address after deploying.*
 
 **1. The user and their one task**
 Sara, a pharmacy customer (fictional), scans the QR code on a box of insulin. In seconds, with no wallet or
@@ -32,7 +32,7 @@ temperature breach or in a recalled batch; selling twice, selling a box the phar
 expiry; recalls by anyone but the regulator or the batch's maker; corrections by a wallet that never handled the box.
 
 **5. How to run it**
-Open [published site URL]. The *Check a box* tab needs no wallet: try `[INS-0001]`.
+Open https://meditrail-s4rc.onrender.com. The *Check a box* tab needs no wallet: try `INS-0001`.
 To record steps: MetaMask on Base Sepolia → *Company* tab → Connect. Contract: [0x…] on https://sepolia.basescan.org.
 Local: `cd web && python -m http.server 8000`. Tests: `python -m pytest test/ -q` (20) and `npm run e2e` (33 checks).
 
