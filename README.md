@@ -44,7 +44,6 @@ tools/e2e.js               browser test of the full demo story on a local chain 
 docs/NOTE.md               the one-page note for the submission form
 docs/DEMO.md               demo-day setup and the 5-minute pitch script
 docs/screenshots/          screenshots from the browser test
-.github/workflows/pages.yml publishes web/ to GitHub Pages
 ```
 
 ---
@@ -84,9 +83,10 @@ The site must be served over http (not opened as a file) because it uses JavaScr
 cd web && python -m http.server 8000      # then open http://localhost:8000
 ```
 
-**Publish for judges (free):** in GitHub → *Settings → Pages → Build and deployment*, choose **GitHub Actions**.
-Every push to `main` then publishes `web/` (see `.github/workflows/pages.yml`).
-QR codes point at whatever address the site is opened from, so print final labels from the published site.
+**Published site:** https://meditrail-s4rc.onrender.com (Render static site, publish folder `web`).
+Every push to `main` redeploys it automatically. QR codes point at whatever address the site is opened from,
+so print final labels from the published site. To deploy the contract without Remix (even from the MetaMask
+phone app's browser), open `/deploy.html` on the site.
 
 ## 4. Tests (no test ETH needed)
 
