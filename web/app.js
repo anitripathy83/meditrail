@@ -101,6 +101,9 @@ function friendlyError(err) {
     if (m) reason = m[1].trim();
   }
   if (reason) return { title: "The contract refused this step", body: esc(reason) + "." };
+  if (/could not coalesce|internal json-rpc|-32603/i.test(text)) {
+    return { title: "MetaMask could not send this step", body: "Usually the wallet is low on test ETH on Base Sepolia, or MetaMask hiccupped. Top up from the faucet, then press the button again. Nothing was recorded." };
+  }
   if (err?.code === "NETWORK_ERROR" || /failed to fetch|network/i.test(text)) {
     return { title: "Network problem", body: "Cannot reach the Base Sepolia network. Check your connection and try again." };
   }
