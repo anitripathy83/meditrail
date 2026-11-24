@@ -47,7 +47,11 @@ function store(key, value) {
   return value;
 }
 
-const readProvider = new ethers.JsonRpcProvider(CONFIG.rpcUrl, CONFIG.chainId, { staticNetwork: true });
+// Public RPCs rate-limit; read through several so the check page keeps working.
+const rpcList = [CONFIG.rpcUrl, ...(CONFIG.rpcFallbacks || [])].filter(Boolean);
+const rpcProviders = rpcList.map((url) => new ethers.JsonRpcProvider(url, CONFIG.chainId, { staticNetwork: true }));
+const readProvider = rpcProviders.length === 1 ? rpcProviders[0]
+  : new ethers.FallbackProvider(rpcProviders.map((provider, i) => ({ provider, priority: i + 1, weight: 1, stallTimeout: 1500 })), CONFIG.chainId, { quorum: 1 });
 const reader = configured ? new ethers.Contract(CONFIG.contractAddress, ABI, readProvider) : null;
 
 const wallet = { account: null, writer: null, member: null, active: false, isAdmin: false };

@@ -13,5 +13,6 @@ export const CONFIG = {
   chainIdHex: "0x14a34",
   chainName: "Base Sepolia",
   rpcUrl: "https://sepolia.base.org",
+  rpcFallbacks: ["https://base-sepolia-rpc.publicnode.com", "https://base-sepolia.drpc.org"],
   explorer: "https://sepolia.basescan.org",
 };
