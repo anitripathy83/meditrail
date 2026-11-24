@@ -2,7 +2,7 @@
 
 ## Before the pitch (do this the evening before)
 
-- [ ] Contract deployed on Base Sepolia, address in `web/config.js`, site live on GitHub Pages.
+- [ ] Contract deployed on Base Sepolia, address in `web/config.js`, site live at https://meditrail-s4rc.onrender.com.
 - [ ] Regulator approved: Gulf Pharma Labs (manufacturer), Desert Logistics (distributor), Al Noor Pharmacy (pharmacy), and the sensor address shown in the Sensor tab of the laptop that will sign readings.
 - [ ] Every company wallet has test ETH.
 - [ ] Prepared boxes (batch `B-2611`, certificate `certificate-B-2611.pdf` attached):
