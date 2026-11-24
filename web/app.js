@@ -206,8 +206,18 @@ function renderTxLog() {
 
 // ------------------------------------------------------------------ tabs and routing
 
+function moveInk() {
+  const active = $(".tab.active");
+  const ink = $(".tab-ink");
+  if (!active || !ink) return;
+  ink.style.left = `${active.offsetLeft}px`;
+  ink.style.width = `${active.offsetWidth}px`;
+}
+
 function showView(name) {
   $$(".tab").forEach((t) => t.classList.toggle("active", t.dataset.view === name));
+  moveInk();
+  if (window.scrollY > 200) window.scrollTo({ top: 0, behavior: reduceMotion ? "auto" : "smooth" });
   $$(".view").forEach((v) => (v.hidden = v.id !== `view-${name}`));
   if (name === "admin") renderAdminLists();
   if (name === "sensor") renderSensor();
@@ -337,7 +347,7 @@ async function checkBox(rawId) {
         <p class="hint">Sensor ${esc(who(box.sensor))} · ${addrLink(box.sensor)}. Each point carries the sensor's own signature, checked by the contract.</p></div>
       <div class="card"><h2>Journey</h2><p class="hint">Every step is signed by the company's own wallet and can never be edited.</p>
         <ol class="timeline">${history.map((e, i) => `
-          <li class="${KIND_CLASS[e.kind] || ""}">
+          <li class="${KIND_CLASS[e.kind] || ""}" style="--i:${i}">
             <div class="step">${esc(e.kind)}</div>
             <div class="who">${esc(who(e.by))}${Number(e.role) ? ` · ${ROLE[Number(e.role)]}` : ""} · <span class="when">${dateTime(e.time)}</span></div>
             ${e.note ? `<div class="note">${esc(e.note)}</div>` : ""}
@@ -354,8 +364,9 @@ async function checkBox(rawId) {
           <li>These rules run inside the smart contract, not this website. Anyone can verify it: ${addrLink(CONFIG.contractAddress)}.</li>
         </ul></details>
       <div class="qr"><img src="${qrImg(checkUrl(id))}" alt="QR code to check ${esc(id)}"><span class="hint">This QR code opens this check page for ${esc(id)}.</span></div>`;
+    $$(".facts .fact", out).forEach((f, i) => f.style.setProperty("--i", i));
     $("#cert-file").addEventListener("change", (ev) => checkCertificate(id, ev.target.files[0]));
-    out.scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "start" });
+    out.scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "start" });
   } catch (err) {
     const e = friendlyError(err);
     showMsg(out, "err", e.title, e.body);
@@ -580,6 +591,100 @@ async function renderAdminLists() {
   }
 }
 
+
+// ------------------------------------------------------------------ motion: scroll story, reveals, counters
+
+const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
+document.documentElement.classList.add("js");
+
+// The green pharmacy cross is a 9 x 9 LED grid. Its LEDs light from the centre outwards
+// as you scroll through the story of one box; fully lit = the box earned its green light.
+const sign = $("#pharmacy-sign");
+const leds = [];
+if (sign) {
+  for (let r = 0; r < 9; r++) for (let c = 0; c < 9; c++) {
+    const cell = document.createElement("span");
+    const onCross = (r >= 3 && r <= 5) || (c >= 3 && c <= 5);
+    cell.className = onCross ? "led on-cross" : "led";
+    if (onCross) leds.push({ el: cell, d: Math.hypot(r - 4, c - 4) + ((r * 7 + c * 3) % 5) * 0.01 });
+    sign.appendChild(cell);
+  }
+  leds.sort((a, b) => a.d - b.d).forEach((l, k) => l.el.style.setProperty("--k", k));
+}
+const steps = $$(".steps li");
+const caption = $("#sign-caption");
+let lastLit = -1;
+let lastStep = -1;
+
+function onScroll() {
+  const y = window.scrollY;
+  const max = document.documentElement.scrollHeight - innerHeight;
+  document.documentElement.style.setProperty("--p", max > 0 ? Math.min(1, y / max) : 0);
+  $("#progress-bar").style.setProperty("--p", max > 0 ? Math.min(1, y / max) : 0);
+  $(".top").classList.toggle("scrolled", y > 8);
+  if (!reduceMotion) $(".hero-art")?.style.setProperty("--sy", Math.min(y, 900));
+
+  const box = $("#journey-scroll");
+  if (!box || !sign || box.offsetParent === null) return;
+  const rect = box.getBoundingClientRect();
+  const vh = innerHeight;
+  const p = Math.max(0, Math.min(1, (vh * 0.6 - rect.top) / (rect.height - vh * 0.3)));
+  const lit = Math.round(p * leds.length);
+  if (lit !== lastLit) {
+    leds.forEach((l, i) => l.el.classList.toggle("lit", i < lit));
+    sign.style.setProperty("--glow", (lit / leds.length).toFixed(3));
+    sign.classList.toggle("full", lit === leds.length);
+    lastLit = lit;
+  }
+  const step = rect.top > vh * 0.75 ? -1 : Math.min(steps.length - 1, Math.floor(p * steps.length * 0.999));
+  if (step !== lastStep) {
+    steps.forEach((li, i) => { li.classList.toggle("active", i === step); li.classList.toggle("seen", i < step); });
+    caption.textContent = lit === leds.length ? "Green light: genuine, cold, sold once"
+      : step < 0 ? "Scroll to follow box INS-0001" : `Step ${step + 1} of ${steps.length}: ${steps[step].dataset.step}`;
+    lastStep = step;
+  }
+  if (lit === leds.length && caption.textContent !== "Green light: genuine, cold, sold once") caption.textContent = "Green light: genuine, cold, sold once";
+}
+let ticking = false;
+addEventListener("scroll", () => {
+  if (ticking) return;
+  ticking = true;
+  requestAnimationFrame(() => { onScroll(); ticking = false; });
+}, { passive: true });
+addEventListener("resize", () => { moveInk(); onScroll(); });
+
+function countUp(el) {
+  const target = Number(el.dataset.count);
+  const pre = el.dataset.prefix || "", post = el.dataset.suffix || "";
+  if (reduceMotion) return;
+  const t0 = performance.now();
+  const tick = (t) => {
+    const k = Math.min(1, (t - t0) / 1300);
+    const eased = 1 - Math.pow(1 - k, 3);
+    el.textContent = `${pre}${Math.round(target * eased)}${post}`;
+    if (k < 1) requestAnimationFrame(tick);
+  };
+  requestAnimationFrame(tick);
+}
+
+const revealer = "IntersectionObserver" in window ? new IntersectionObserver((entries) => {
+  entries.forEach((e) => {
+    if (!e.isIntersecting) return;
+    e.target.classList.add("in");
+    $$("[data-count]", e.target).forEach(countUp);
+    revealer.unobserve(e.target);
+  });
+}, { rootMargin: "0px 0px -12% 0px", threshold: 0.12 }) : null;
+$$("[data-reveal]").forEach((el) => (revealer ? revealer.observe(el) : el.classList.add("in")));
+
+const smooth = reduceMotion ? "auto" : "smooth";
+$("#to-story")?.addEventListener("click", () => $("#how").scrollIntoView({ behavior: smooth, block: "start" }));
+$("#cta-check")?.addEventListener("click", () => {
+  window.scrollTo({ top: 0, behavior: smooth });
+  setTimeout(() => $("#check-id").focus({ preventScroll: true }), reduceMotion ? 0 : 500);
+});
+document.fonts?.ready.then(moveInk);
+
 // ------------------------------------------------------------------ start
 
 function route() {
@@ -601,3 +706,5 @@ $("#member-until").value = isoDate(new Date(Date.now() + 365 * 864e5));
 renderWallet();
 loadDirectory().then(fillSelects).catch(() => {});
 route();
+moveInk();
+onScroll();
