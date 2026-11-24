@@ -592,6 +592,73 @@ async function renderAdminLists() {
 }
 
 
+
+// ------------------------------------------------------------------ the storefront behind the page
+// Behind every page sits a pharmacy at night. Two glass doors, each carrying half of a neon
+// cross, slide apart as you scroll and reveal lit shelves of medicine boxes.
+
+function seeded(seed) { return () => ((seed = (seed * 16807) % 2147483647) - 1) / 2147483646; }
+(function buildShelves() {
+  const host = $("#scene-interior");
+  if (!host) return;
+  const rnd = seeded(20261124);
+  const colours = ["#1f6f86", "#2a8f6a", "#5b4a96", "#b8873a", "#b95546", "#2c5d8f", "#cfe2ea", "#3a9fb5"];
+  let boxes = "";
+  const shelfYs = [210, 380, 550, 720, 890];
+  for (const y of shelfYs) {
+    let x = 30 + rnd() * 30;
+    while (x < 1570) {
+      const w = 26 + rnd() * 48, h = 46 + rnd() * 92;
+      if (x > 690 && x < 910 && y < 400) { x = 910; continue; } // leave room for the hanging cross
+      const c = colours[Math.floor(rnd() * colours.length)];
+      boxes += `<rect x="${x.toFixed(0)}" y="${(y - h).toFixed(0)}" width="${w.toFixed(0)}" height="${h.toFixed(0)}" rx="3" fill="${c}" opacity="${(0.45 + rnd() * 0.35).toFixed(2)}"/>`;
+      if (rnd() > 0.35) boxes += `<rect x="${(x + 5).toFixed(0)}" y="${(y - h + 10).toFixed(0)}" width="${(w - 10).toFixed(0)}" height="7" rx="2" fill="#fff" opacity=".28"/>`;
+      x += w + 4 + rnd() * 14;
+    }
+    boxes += `<rect x="0" y="${y}" width="1600" height="12" fill="#163f4c"/><rect x="0" y="${y + 12}" width="1600" height="10" fill="#000" opacity=".35"/>`;
+  }
+  host.innerHTML = `<svg viewBox="0 0 1600 1000" preserveAspectRatio="xMidYMid slice">
+    <defs>
+      <linearGradient id="wall" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0d2c37"/><stop offset="1" stop-color="#061820"/></linearGradient>
+      <filter id="neonblur" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="14"/></filter>
+    </defs>
+    <rect width="1600" height="1000" fill="url(#wall)"/>
+    ${boxes}
+    <g transform="translate(800 150)">
+      <path d="M-25 -75h50v50h50v50h-50v50h-50v-50h-50v-50h50z" fill="#39e48f" filter="url(#neonblur)" opacity=".9"/>
+      <path d="M-25 -75h50v50h50v50h-50v50h-50v-50h-50v-50h50z" fill="#39e48f"/>
+      <path d="M-25 -75h50v50h50v50h-50v50h-50v-50h-50v-50h50z" fill="none" stroke="#c9ffe2" stroke-width="3" opacity=".7"/>
+    </g>
+  </svg>`;
+})();
+
+(function buildCapsules() {
+  const host = $("#capsules");
+  if (!host || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  const rnd = seeded(7);
+  const pairs = [["#46cdeb", "#e8f4f7"], ["#39e48f", "#e8f4f7"], ["#ffbb55", "#e8f4f7"], ["#ff6f62", "#e8f4f7"]];
+  let html = "";
+  for (let i = 0; i < 14; i++) {
+    const [c1, c2] = pairs[i % pairs.length];
+    html += `<span class="capsule" style="left:${(rnd() * 96).toFixed(1)}%;--w:${(22 + rnd() * 26).toFixed(0)}px;--t:${(22 + rnd() * 22).toFixed(1)}s;--delay:-${(rnd() * 40).toFixed(1)}s;--r0:${(rnd() * 360).toFixed(0)}deg;--c1:${c1};--c2:${c2}"></span>`;
+  }
+  host.innerHTML = html;
+})();
+
+// Cursor spotlight on panels, and a gentle tilt on the "who it helps" cards.
+document.addEventListener("pointermove", (ev) => {
+  const el = ev.target.closest?.(".card, .stat, .defences li, .aud-grid article");
+  if (!el) return;
+  const r = el.getBoundingClientRect();
+  el.style.setProperty("--mx", `${ev.clientX - r.left}px`);
+  el.style.setProperty("--my", `${ev.clientY - r.top}px`);
+  if (el.matches(".aud-grid article") && !matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    el.style.setProperty("--ry", `${((ev.clientX - r.left) / r.width - 0.5) * 10}deg`);
+    el.style.setProperty("--rx", `${-((ev.clientY - r.top) / r.height - 0.5) * 10}deg`);
+  }
+}, { passive: true });
+$$(".aud-grid article").forEach((a) => a.addEventListener("pointerleave", () => { a.style.setProperty("--rx", "0deg"); a.style.setProperty("--ry", "0deg"); }));
+
 // ------------------------------------------------------------------ motion: scroll story, reveals, counters
 
 const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -622,6 +689,7 @@ function onScroll() {
   document.documentElement.style.setProperty("--p", max > 0 ? Math.min(1, y / max) : 0);
   $("#progress-bar").style.setProperty("--p", max > 0 ? Math.min(1, y / max) : 0);
   $(".top").classList.toggle("scrolled", y > 8);
+  document.documentElement.style.setProperty("--open", Math.min(1, y / (innerHeight * 0.85)).toFixed(3));
   if (!reduceMotion) $(".hero-art")?.style.setProperty("--sy", Math.min(y, 900));
 
   const box = $("#journey-scroll");

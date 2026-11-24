@@ -3,6 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#051319">
   <title>MediTrail – check your medicine</title>
   <meta name="description" content="Scan a medicine box and see, from the blockchain, whether it is genuine, kept cold and safe to use.">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%230e7c66'/><path d='M13 7h6v6h6v6h-6v6h-6v-6H7v-6h6z' fill='white'/></svg>">
@@ -13,6 +14,15 @@
   <script>document.documentElement.classList.add("js")</script>
 </head>
 <body>
+  <div class="scene" aria-hidden="true">
+    <div class="scene-interior" id="scene-interior"></div>
+    <div class="scene-glow"></div>
+    <div class="scene-grid"></div>
+    <div class="door door-l"></div>
+    <div class="door door-r"></div>
+    <div class="scene-shade"></div>
+    <div id="capsules"></div>
+  </div>
   <div class="progress" aria-hidden="true"><span id="progress-bar"></span></div>
   <header class="top">
     <div class="brand">
@@ -38,7 +48,7 @@
     <section id="view-check" class="view">
       <div class="hero">
         <div class="hero-copy">
-          <h1>Is this medicine safe?</h1>
+          <h1 aria-label="Is this medicine safe?"><span class="w" aria-hidden="true"><span style="--i:0">Is</span></span> <span class="w" aria-hidden="true"><span style="--i:1">this</span></span> <span class="w" aria-hidden="true"><span style="--i:2">medicine</span></span> <span class="w" aria-hidden="true"><span style="--i:3">safe?</span></span></h1>
           <p class="lead">Scan the code on the box or type it in. You'll see who handled it, how cold it was kept, and whether anyone tried to fake it. No wallet or account needed.</p>
           <form id="check-form" class="search">
             <svg class="search-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7V4h3M21 7V4h-3M3 17v3h3M21 17v3h-3M7 12h10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
@@ -93,6 +103,9 @@
             </g>
           </svg>
         </figure>
+      </div>
+      <div class="ticker" aria-label="Examples of steps the smart contract refuses or accepts">
+        <div class="ticker-track"><span class="tk no">Refused: box was not offered to you</span><span class="tk yes">Accepted: seal code verified</span><span class="tk no">Refused: seal code does not match</span><span class="tk no">Refused: temperature breach, 11.2 °C</span><span class="tk yes">Signed: 4.6 °C by the box sensor</span><span class="tk no">Refused: this box was already sold</span><span class="tk no">Refused: out of order, distributor first</span><span class="tk yes">Genuine and safe: INS-0001</span><span class="tk no">Refused: this batch has been recalled</span><span class="tk no">Refused: your licence has expired</span><span aria-hidden="true" style="display:contents"><span class="tk no">Refused: box was not offered to you</span><span class="tk yes">Accepted: seal code verified</span><span class="tk no">Refused: seal code does not match</span><span class="tk no">Refused: temperature breach, 11.2 °C</span><span class="tk yes">Signed: 4.6 °C by the box sensor</span><span class="tk no">Refused: this box was already sold</span><span class="tk no">Refused: out of order, distributor first</span><span class="tk yes">Genuine and safe: INS-0001</span><span class="tk no">Refused: this batch has been recalled</span><span class="tk no">Refused: your licence has expired</span></span></div>
       </div>
       <div id="check-result" aria-live="polite"></div>
       <section class="defences" aria-labelledby="defences-h">
