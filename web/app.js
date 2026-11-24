@@ -593,57 +593,122 @@ async function renderAdminLists() {
 
 
 
-// ------------------------------------------------------------------ the storefront behind the page
-// Behind every page sits a pharmacy at night. Two glass doors, each carrying half of a neon
-// cross, slide apart as you scroll and reveal lit shelves of medicine boxes.
+// ------------------------------------------------------------------ the cold-chain map behind the page
+// Behind every page is a night map of a city. A route runs Factory -> Distributor -> Pharmacy -> You.
+// As you scroll, the route draws itself, a glowing medicine box travels along it with a live
+// temperature reading, and each stop it reaches lights up as a signed block.
 
 function seeded(seed) { return () => ((seed = (seed * 16807) % 2147483647) - 1) / 2147483646; }
-(function buildShelves() {
-  const host = $("#scene-interior");
-  if (!host) return;
-  const rnd = seeded(20261124);
-  const colours = ["#1f6f86", "#2a8f6a", "#5b4a96", "#b8873a", "#b95546", "#2c5d8f", "#cfe2ea", "#3a9fb5"];
-  let boxes = "";
-  const shelfYs = [210, 380, 550, 720, 890];
-  for (const y of shelfYs) {
-    let x = 30 + rnd() * 30;
-    while (x < 1570) {
-      const w = 26 + rnd() * 48, h = 46 + rnd() * 92;
-      if (x > 690 && x < 910 && y < 400) { x = 910; continue; } // leave room for the hanging cross
-      const c = colours[Math.floor(rnd() * colours.length)];
-      boxes += `<rect x="${x.toFixed(0)}" y="${(y - h).toFixed(0)}" width="${w.toFixed(0)}" height="${h.toFixed(0)}" rx="3" fill="${c}" opacity="${(0.45 + rnd() * 0.35).toFixed(2)}"/>`;
-      if (rnd() > 0.35) boxes += `<rect x="${(x + 5).toFixed(0)}" y="${(y - h + 10).toFixed(0)}" width="${(w - 10).toFixed(0)}" height="7" rx="2" fill="#fff" opacity=".28"/>`;
-      x += w + 4 + rnd() * 14;
-    }
-    boxes += `<rect x="0" y="${y}" width="1600" height="12" fill="#163f4c"/><rect x="0" y="${y + 12}" width="1600" height="10" fill="#000" opacity=".35"/>`;
+const map = { built: null, route: null, live: null, len: 0, nodeLen: [], nodes: [], courier: null, temp: null };
+
+function smoothPath(pts) {
+  // Catmull-Rom through the stops, written as cubic Bezier curves.
+  let d = `M${pts[0][0]} ${pts[0][1]}`;
+  for (let i = 0; i < pts.length - 1; i++) {
+    const p0 = pts[Math.max(0, i - 1)], p1 = pts[i], p2 = pts[i + 1], p3 = pts[Math.min(pts.length - 1, i + 2)];
+    const c1 = [p1[0] + (p2[0] - p0[0]) / 5, p1[1] + (p2[1] - p0[1]) / 5];
+    const c2 = [p2[0] - (p3[0] - p1[0]) / 5, p2[1] - (p3[1] - p1[1]) / 5];
+    d += ` C${c1[0].toFixed(0)} ${c1[1].toFixed(0)} ${c2[0].toFixed(0)} ${c2[1].toFixed(0)} ${p2[0]} ${p2[1]}`;
   }
-  host.innerHTML = `<svg viewBox="0 0 1600 1000" preserveAspectRatio="xMidYMid slice">
+  return d;
+}
+
+function buildMap() {
+  const host = $("#scene-map");
+  if (!host) return;
+  const portrait = innerWidth < innerHeight;
+  const layout = portrait ? "p" : "l";
+  if (map.built === layout) return;
+  map.built = layout;
+  const W = portrait ? 600 : 1600, H = 1000;
+  const rnd = seeded(portrait ? 11 : 23);
+  const stops = portrait
+    ? [[140, 905, "Factory", "Block 1: registered"], [445, 665, "Distributor", "Block 2: seal verified"], [150, 420, "Pharmacy", "Block 3: received cold"], [430, 150, "You", "Block 4: green light"]]
+    : [[190, 820, "Factory", "Block 1: registered"], [640, 545, "Distributor", "Block 2: seal verified"], [1070, 720, "Pharmacy", "Block 3: received cold"], [1420, 290, "You", "Block 4: green light"]];
+  const river = portrait ? `M-40 560 C 160 520, 260 600, 380 540 S 560 470, 660 520` : `M-60 330 C 260 250, 420 420, 720 360 S 1180 210, 1680 300`;
+
+  let blocks = "";
+  const step = portrait ? 60 : 80;
+  for (let x = 0; x < W; x += step) for (let y = 0; y < H; y += step) {
+    if (rnd() < 0.18) continue;
+    const pad = 7 + rnd() * 6;
+    blocks += `<rect class="map-block${rnd() > 0.7 ? " alt" : ""}" x="${x + pad}" y="${y + pad}" width="${step - pad * 2}" height="${step - pad * 2}" rx="4"/>`;
+  }
+  const roads = portrait
+    ? ["M0 300 H600", "M0 780 H600", "M300 0 V1000", "M0 120 C 200 160, 400 60, 600 110"]
+    : ["M0 640 H1600", "M0 160 C 400 220, 900 80, 1600 150", "M480 0 V1000", "M1240 0 C 1200 400, 1300 700, 1260 1000", "M0 900 C 500 860, 1100 960, 1600 880"];
+  const minor = portrait ? ["M120 0 V1000", "M480 0 V1000", "M0 460 H600"] : ["M240 0 V1000", "M800 0 V1000", "M1000 0 V1000", "M0 420 H1600", "M0 760 H1600"];
+  const routeD = smoothPath(stops);
+
+  host.innerHTML = `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid slice">
     <defs>
-      <linearGradient id="wall" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0d2c37"/><stop offset="1" stop-color="#061820"/></linearGradient>
-      <filter id="neonblur" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="14"/></filter>
+      <linearGradient id="routeGrad" gradientUnits="userSpaceOnUse" x1="${stops[0][0]}" y1="${stops[0][1]}" x2="${stops[3][0]}" y2="${stops[3][1]}">
+        <stop offset="0" stop-color="#46cdeb"/><stop offset="1" stop-color="#39e48f"/>
+      </linearGradient>
+      <filter id="glow" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="4" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
     </defs>
-    <rect width="1600" height="1000" fill="url(#wall)"/>
-    ${boxes}
-    <g transform="translate(800 150)">
-      <path d="M-25 -75h50v50h50v50h-50v50h-50v-50h-50v-50h50z" fill="#39e48f" filter="url(#neonblur)" opacity=".9"/>
-      <path d="M-25 -75h50v50h50v50h-50v50h-50v-50h-50v-50h50z" fill="#39e48f"/>
-      <path d="M-25 -75h50v50h50v50h-50v50h-50v-50h-50v-50h50z" fill="none" stroke="#c9ffe2" stroke-width="3" opacity=".7"/>
+    ${blocks}
+    <path class="map-river" d="${river}"/><path class="map-river-glint" d="${river}"/>
+    ${minor.map((d) => `<path class="map-road minor" d="${d}"/>`).join("")}
+    ${roads.map((d) => `<path class="map-road" d="${d}"/>`).join("")}
+    ${roads.map((d, i) => `<path class="map-traffic${i % 2 ? " slow" : ""}" d="${d}" style="animation-delay:-${i * 1.7}s"/>`).join("")}
+    <g class="route-layer">
+    <path class="route-base" d="${routeD}"/>
+    <path class="route-live" id="route-live" d="${routeD}"/>
+    <path class="route-pulse" id="route-pulse" d="${routeD}"/>
+    ${stops.map(([x, y, name, sub], i) => {
+      const right = portrait ? x < 300 : i !== 3;
+      const tx = right ? x + 26 : x - 26, anchor = right ? "start" : "end";
+      return `<g class="node" data-i="${i}"><circle class="ripple" cx="${x}" cy="${y}" r="14"/><circle class="ring" cx="${x}" cy="${y}" r="14"/><circle class="core" cx="${x}" cy="${y}" r="6"/>
+        <text x="${tx}" y="${y - 2}" text-anchor="${anchor}">${name}</text><text class="sub" x="${tx}" y="${y + 16}" text-anchor="${anchor}">${sub}</text></g>`;
+    }).join("")}
+    <g class="courier" id="courier">
+      <circle class="halo" r="24"/>
+      <rect class="boxbody" x="-13" y="-10" width="26" height="20" rx="3"/><rect class="boxband" x="-13" y="-10" width="26" height="7" rx="3"/>
+      <g transform="translate(20 -36)"><rect class="temp-bg" width="74" height="24" rx="12"/><text class="temp" id="courier-temp" x="37" y="16.5" text-anchor="middle">4.6 °C</text></g>
+    </g>
     </g>
   </svg>`;
-})();
 
-(function buildCapsules() {
-  const host = $("#capsules");
-  if (!host || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-  const rnd = seeded(7);
-  const pairs = [["#46cdeb", "#e8f4f7"], ["#39e48f", "#e8f4f7"], ["#ffbb55", "#e8f4f7"], ["#ff6f62", "#e8f4f7"]];
-  let html = "";
-  for (let i = 0; i < 14; i++) {
-    const [c1, c2] = pairs[i % pairs.length];
-    html += `<span class="capsule" style="left:${(rnd() * 96).toFixed(1)}%;--w:${(22 + rnd() * 26).toFixed(0)}px;--t:${(22 + rnd() * 22).toFixed(1)}s;--delay:-${(rnd() * 40).toFixed(1)}s;--r0:${(rnd() * 360).toFixed(0)}deg;--c1:${c1};--c2:${c2}"></span>`;
+  map.live = $("#route-live");
+  map.len = map.live.getTotalLength();
+  map.live.style.strokeDasharray = `${map.len}`;
+  const pulse = $("#route-pulse");
+  pulse.style.strokeDasharray = `18 ${map.len}`;
+  pulse.style.animation = "none";
+  if (!matchMedia("(prefers-reduced-motion: reduce)").matches && pulse.animate) {
+    pulse.animate([{ strokeDashoffset: map.len + 18 }, { strokeDashoffset: 0 }], { duration: 4200, iterations: Infinity });
   }
-  host.innerHTML = html;
-})();
+  // Where along the route each stop sits.
+  map.nodeLen = stops.map(([x, y]) => {
+    let best = 0, bestD = Infinity;
+    for (let l = 0; l <= map.len; l += 4) {
+      const pt = map.live.getPointAtLength(l);
+      const d = (pt.x - x) ** 2 + (pt.y - y) ** 2;
+      if (d < bestD) { bestD = d; best = l; }
+    }
+    return best;
+  });
+  map.nodes = $$(".node", host);
+  map.courier = $("#courier");
+  map.temp = $("#courier-temp");
+  map.last = -1;
+}
+
+function updateMap(p) {
+  if (!map.live) return;
+  const drawn = Math.max(0.001, Math.min(1, p)) * map.len;
+  if (Math.abs(drawn - map.last) < 0.5) return;
+  map.last = drawn;
+  map.live.style.strokeDashoffset = `${map.len - drawn}`;
+  const pt = map.live.getPointAtLength(drawn);
+  map.courier.setAttribute("transform", `translate(${pt.x.toFixed(1)} ${pt.y.toFixed(1)})`);
+  map.temp.textContent = `${(4.6 + 1.3 * Math.sin(p * 17) + 0.4 * Math.sin(p * 53)).toFixed(1)} °C`;
+  map.nodes.forEach((n, i) => n.classList.toggle("lit", drawn >= map.nodeLen[i] - 6));
+}
+
+buildMap();
+addEventListener("resize", () => { buildMap(); map.last = -1; });
 
 // Cursor spotlight on panels, and a gentle tilt on the "who it helps" cards.
 document.addEventListener("pointermove", (ev) => {
@@ -689,7 +754,10 @@ function onScroll() {
   document.documentElement.style.setProperty("--p", max > 0 ? Math.min(1, y / max) : 0);
   $("#progress-bar").style.setProperty("--p", max > 0 ? Math.min(1, y / max) : 0);
   $(".top").classList.toggle("scrolled", y > 8);
-  document.documentElement.style.setProperty("--open", Math.min(1, y / (innerHeight * 0.85)).toFixed(3));
+  // The route fades in once the hero is scrolled past, then draws over the rest of the page.
+  const start = innerHeight * 0.45;
+  document.documentElement.style.setProperty("--route", Math.max(0, Math.min(1, (y - innerHeight * 0.2) / (innerHeight * 0.45))).toFixed(3));
+  updateMap(max > start ? (y - start) / (max - start) : 0);
   if (!reduceMotion) $(".hero-art")?.style.setProperty("--sy", Math.min(y, 900));
 
   const box = $("#journey-scroll");

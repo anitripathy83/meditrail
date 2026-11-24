@@ -5,7 +5,7 @@
 :root {
   --bg: #051319;
   --bg-2: #08202a;
-  --panel: rgba(10, 33, 43, .78);
+  --panel: rgba(9, 30, 40, .88);
   --panel-2: rgba(14, 42, 54, .86);
   --field: rgba(255, 255, 255, .055);
   --text: #e8f4f7;
@@ -47,62 +47,49 @@ a:hover { color: var(--accent-hi); }
 :focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; border-radius: 6px; }
 main, .foot, .banner { position: relative; z-index: 1; }
 
-/* ================================================================ the storefront behind everything */
-.scene { position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; }
-.scene-interior {
-  position: absolute; inset: 0;
-  filter: brightness(calc(.42 + var(--open) * .58)) saturate(calc(.6 + var(--open) * .6));
-  transform: scale(calc(1.08 - var(--open) * .08));
-  transition: filter .2s linear;
-}
-.scene-interior svg { width: 100%; height: 100%; display: block; }
-.scene-glow {
-  position: absolute; left: 50%; top: -18vh; width: 120vw; height: 80vh; transform: translateX(-50%);
-  background: radial-gradient(closest-side, rgba(57, 228, 143, calc(.10 + var(--open) * .22)), transparent 75%);
-}
-.door {
-  position: absolute; top: 0; bottom: 0; width: 50.2%;
-  background:
-    linear-gradient(115deg, transparent 0 18%, rgba(190, 240, 255, .07) 18% 21%, transparent 21% 34%, rgba(190, 240, 255, .05) 34% 35.5%, transparent 35.5%),
-    linear-gradient(180deg, rgba(9, 32, 42, .88), rgba(6, 22, 30, .94));
-  border: 10px solid #0b2a35; box-shadow: inset 0 0 0 1px rgba(150, 215, 235, .14), inset 0 0 80px rgba(0, 0, 0, .45);
-  transition: transform .12s linear;
-  will-change: transform;
-}
-.door-l { left: 0; transform: translateX(calc(var(--open) * -96%)); border-right-width: 5px; }
-.door-r { right: 0; transform: translateX(calc(var(--open) * 96%)); border-left-width: 5px; }
-.door::before { /* handle bar */
-  content: ""; position: absolute; top: 42%; width: 8px; height: 22vh; border-radius: 8px;
-  background: linear-gradient(90deg, #6b8792, #cfe6ee 45%, #58717c); box-shadow: 0 0 12px rgba(0, 0, 0, .5);
-}
-.door-l::before { right: 22px; }
-.door-r::before { left: 22px; }
-.door::after { /* half of the big neon cross decal, split at the seam */
-  content: ""; position: absolute; top: 50%; width: min(14vw, 140px); height: min(42vw, 420px); max-height: 52vh;
-  background:
-    linear-gradient(var(--neon), var(--neon)) 0 50% / 100% 33.4% no-repeat,
-    linear-gradient(var(--neon), var(--neon)) 0 0 / 50% 100% no-repeat;
-  opacity: .13; filter: drop-shadow(0 0 18px rgba(57, 228, 143, .9));
-}
-.door-l::after { right: 0; transform: translateY(-50%) scaleX(-1); }
-.door-r::after { left: 0; transform: translateY(-50%); }
+/* ================================================================ the cold-chain map behind everything */
+.scene { position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; background: radial-gradient(120% 90% at 70% 10%, #0b2733 0%, var(--bg) 60%); }
+.scene-map { position: absolute; inset: 0; }
+.scene-map svg { width: 100%; height: 100%; display: block; }
+.route-layer { opacity: var(--route, 0); transition: opacity .3s linear; }
+.map-block { fill: #0a2430; }
+.map-block.alt { fill: #0c2a37; }
+.map-road { fill: none; stroke: #113442; stroke-width: 10; stroke-linecap: round; }
+.map-road.minor { stroke-width: 5; stroke: #0f2e3b; }
+.map-traffic { fill: none; stroke: rgba(70, 205, 235, .55); stroke-width: 2; stroke-linecap: round; stroke-dasharray: 2 46; animation: traffic 6s linear infinite; }
+.map-traffic.slow { animation-duration: 11s; stroke: rgba(255, 187, 85, .4); }
+@keyframes traffic { to { stroke-dashoffset: -480; } }
+.map-river { fill: none; stroke: #082f45; stroke-width: 46; stroke-linecap: round; opacity: .9; }
+.map-river-glint { fill: none; stroke: rgba(70, 205, 235, .16); stroke-width: 2; stroke-dasharray: 18 30; animation: traffic 14s linear infinite; }
+.route-base { fill: none; stroke: rgba(150, 215, 235, .22); stroke-width: 3; stroke-dasharray: 2 10; stroke-linecap: round; }
+.route-live { fill: none; stroke: url(#routeGrad); stroke-width: 5; stroke-linecap: round; filter: url(#glow); }
+.route-pulse { fill: none; stroke: rgba(200, 255, 230, .9); stroke-width: 3; stroke-linecap: round; stroke-dasharray: 18 900; animation: pulse 3.2s linear infinite; filter: url(#glow); }
+@keyframes pulse { from { stroke-dashoffset: 918; } to { stroke-dashoffset: 0; } }
+.node .ring { fill: #06161d; stroke: rgba(150, 215, 235, .35); stroke-width: 2; transition: stroke .4s, fill .4s; }
+.node .core { fill: rgba(150, 215, 235, .35); transition: fill .4s; }
+.node .ripple { fill: none; stroke: var(--neon); stroke-width: 2; opacity: 0; }
+.node text { font: 700 15px var(--font); fill: var(--muted); transition: fill .4s; }
+.node .sub { font: 600 12px var(--mono); fill: transparent; transition: fill .4s; }
+.node.lit .ring { stroke: var(--neon); fill: #07261b; }
+.node.lit .core { fill: var(--neon); }
+.node.lit text { fill: var(--text); }
+.node.lit .sub { fill: var(--neon); }
+.node.lit .ripple { animation: ripple 2.4s ease-out infinite; }
+@keyframes ripple { 0% { r: 14; opacity: .8; } 100% { r: 46; opacity: 0; } }
+.link { fill: none; stroke: rgba(57, 228, 143, 0); stroke-width: 1.5; stroke-dasharray: 4 5; transition: stroke .5s; }
+.link.lit { stroke: rgba(57, 228, 143, .55); }
+.courier .halo { fill: rgba(70, 205, 235, .18); animation: breathe 1.8s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+@keyframes breathe { 50% { transform: scale(1.35); opacity: .5; } }
+.courier .boxbody { fill: #f6fbfd; stroke: #0a6c88; stroke-width: 2; }
+.courier .boxband { fill: #0a6c88; }
+.courier .temp { font: 700 13px var(--mono); fill: var(--good); }
+.courier .temp-bg { fill: rgba(4, 16, 21, .85); stroke: rgba(57, 228, 143, .45); }
 .scene-shade {
   position: absolute; inset: 0;
   background:
-    radial-gradient(120% 80% at 20% 15%, rgba(5, 19, 25, .55), transparent 70%),
-    linear-gradient(180deg, rgba(5, 19, 25, calc(.18 + var(--open) * .42)), rgba(5, 19, 25, calc(.35 + var(--open) * .4)));
+    radial-gradient(90% 70% at 22% 28%, rgba(5, 19, 25, .72), transparent 70%),
+    linear-gradient(180deg, rgba(5, 19, 25, .25), rgba(5, 19, 25, .5));
 }
-.scene-grid {
-  position: absolute; inset: 0; opacity: .5;
-  background-image: linear-gradient(var(--line-2) 1px, transparent 1px), linear-gradient(90deg, var(--line-2) 1px, transparent 1px);
-  background-size: 56px 56px; -webkit-mask-image: radial-gradient(ellipse at 50% 30%, #000 20%, transparent 75%); mask-image: radial-gradient(ellipse at 50% 30%, #000 20%, transparent 75%);
-}
-.capsule {
-  position: absolute; bottom: -60px; width: var(--w, 34px); height: calc(var(--w, 34px) * .42); border-radius: 999px;
-  background: linear-gradient(90deg, var(--c1, #46cdeb) 50%, var(--c2, #e8f4f7) 50%);
-  opacity: .16; animation: drift var(--t, 26s) linear var(--delay, 0s) infinite;
-}
-@keyframes drift { from { transform: translateY(0) rotate(var(--r0, 0deg)); } to { transform: translateY(-120vh) rotate(calc(var(--r0, 0deg) + 320deg)); } }
 
 /* ================================================================ header */
 .progress { position: fixed; top: 0; left: 0; right: 0; height: 3px; z-index: 40; pointer-events: none; }
@@ -545,7 +532,6 @@ tr:last-child td { border-bottom: 0; }
   .cmp-row > span:first-child { grid-column: 1 / -1; padding-bottom: 4px; border-top: 1px solid var(--line-2); }
   .cmp-row > span:nth-child(2), .cmp-row > span:nth-child(3) { border-top: 0; padding-top: 6px; font-size: 14px; }
   .cmp-head > span:first-child { display: none; }
-  .door::before { height: 14vh; }
 }
 @media (max-width: 640px) {
   .top { padding: 10px 14px; gap: 10px; }
@@ -564,7 +550,6 @@ tr:last-child td { border-bottom: 0; }
   .row { flex-wrap: wrap; }
   .steps li { padding-left: 54px; }
   .steps li::before { width: 38px; height: 38px; margin-top: -19px; font-size: 15px; }
-  .door { border-width: 6px; }
 }
 
 /* ================================================================ motion preferences and print */
@@ -574,7 +559,7 @@ tr:last-child td { border-bottom: 0; }
   .js [data-reveal] { opacity: 1; transform: none; filter: none; }
   .steps li { opacity: 1; transform: none; filter: none; }
   .hero-art { transform: none; }
-  .capsule { display: none; }
+  .map-traffic, .route-pulse, .map-river-glint { animation: none; }
 }
 @media print {
   body, html { background: #fff; color: #000; }
