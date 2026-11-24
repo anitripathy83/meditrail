@@ -33,7 +33,7 @@ expiry; recalls by anyone but the regulator or the batch's maker; corrections by
 
 **5. How to run it**
 Open https://meditrail-s4rc.onrender.com. The *Check a box* tab needs no wallet: try `INS-0001`.
-To record steps: MetaMask on Base Sepolia → *Company* tab → Connect. Contract: [0x…] on https://sepolia.basescan.org.
+To record steps: MetaMask on Base Sepolia → *Company* tab → Connect. Contract: [0x93d65cDAFeA8856608d2Ce1eB05326A5C159EF87](https://sepolia.basescan.org/address/0x93d65cDAFeA8856608d2Ce1eB05326A5C159EF87) on Base Sepolia.
 Local: `cd web && python -m http.server 8000`. Tests: `python -m pytest test/ -q` (20) and `npm run e2e` (33 checks).
 
 **6. Path to real life**

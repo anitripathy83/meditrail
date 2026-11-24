@@ -6,7 +6,7 @@
 // ---------------------------------------------------------------------------
 export const CONFIG = {
   // TODO after deploying: e.g. "0x1234...abcd"
-  contractAddress: "",
+  contractAddress: "0x93d65cDAFeA8856608d2Ce1eB05326A5C159EF87",
 
   // Base Sepolia test network
   chainId: 84532,

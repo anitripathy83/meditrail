@@ -26,6 +26,8 @@ All data is fictional. No real names, no patient data, no real money.
 
 Live site: https://meditrail-s4rc.onrender.com
 
+Contract on Base Sepolia: [`0x93d65cDAFeA8856608d2Ce1eB05326A5C159EF87`](https://sepolia.basescan.org/address/0x93d65cDAFeA8856608d2Ce1eB05326A5C159EF87)
+
 ---
 
 ## What's in this repo
