@@ -15,10 +15,20 @@
 </head>
 <body>
   <div class="scene" aria-hidden="true">
-    <div class="scene-map" id="scene-map"></div>
+    <canvas id="lattice"></canvas>
     <div class="scene-shade"></div>
   </div>
-  <div class="progress" aria-hidden="true"><span id="progress-bar"></span></div>
+  <nav class="rail-nav" id="journey-rail" aria-label="Page position, shown as the box's journey">
+    <div class="jr-track" id="jr-track"><div class="jr-fill"></div></div>
+    <button type="button" class="jr-stop" style="--at:0" data-at="0"><span class="jr-dot"></span><span class="jr-label">Factory<small>Block 1: registered</small></span></button>
+    <button type="button" class="jr-stop" style="--at:.3333" data-at=".3333"><span class="jr-dot"></span><span class="jr-label">Distributor<small>Block 2: seal verified</small></span></button>
+    <button type="button" class="jr-stop" style="--at:.6667" data-at=".6667"><span class="jr-dot"></span><span class="jr-label">Pharmacy<small>Block 3: received cold</small></span></button>
+    <button type="button" class="jr-stop" style="--at:1" data-at="1"><span class="jr-dot"></span><span class="jr-label">You<small>Block 4: green light</small></span></button>
+    <div class="jr-box" id="jr-box" role="slider" tabindex="0" aria-label="Scroll position" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+      <svg viewBox="0 0 32 26" aria-hidden="true"><rect x="1" y="1" width="30" height="24" rx="4" class="jb-body"/><rect x="1" y="1" width="30" height="8" rx="4" class="jb-band"/><rect x="1" y="6" width="30" height="3" class="jb-band"/><path d="M14 13h4v3h3v4h-3v3h-4v-3h-3v-4h3z" class="jb-cross"/></svg>
+      <span class="jr-temp" id="jr-temp">4.6 °C</span>
+    </div>
+  </nav>
   <header class="top">
     <div class="brand">
       <svg class="logo" viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="18" fill="none" stroke="currentColor" stroke-width="2" stroke-dasharray="3 3"/><circle cx="20" cy="20" r="13" fill="currentColor"/><path d="M17.5 13h5v4.5H27v5h-4.5V27h-5v-4.5H13v-5h4.5z" fill="#fff"/></svg>
