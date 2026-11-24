@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>MediTrail – deploy the contract</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="top">
+    <div class="brand">
+      <div class="logo" aria-hidden="true">+</div>
+      <div><div class="brand-name">MediTrail</div><div class="brand-sub">One-time setup: deploy the contract</div></div>
+    </div>
+  </header>
+  <main>
+    <section class="view">
+      <h1>Deploy MediTrail</h1>
+      <p class="lead">Deploys <code>contracts/MediTrail.sol</code> to Base Sepolia from your wallet, compiled with solc 0.8.24 and the optimizer on (200 runs), the same as Remix with those settings. The wallet that deploys becomes the <strong>regulator</strong>.</p>
+      <div class="card">
+        <h2>1. Connect</h2>
+        <p class="hint">On a phone, open this page inside the MetaMask app's browser.</p>
+        <div class="actions"><button class="primary" id="connect">Connect MetaMask</button></div>
+        <div id="who"></div>
+      </div>
+      <div class="card">
+        <h2>2. Deploy</h2>
+        <p class="hint">Costs a small amount of free test ETH. Do this once.</p>
+        <div class="actions"><button class="primary" id="deploy" disabled>Deploy contract</button></div>
+        <div id="msg"></div>
+      </div>
+    </section>
+  </main>
+  <script type="module">
+    import { ethers } from "./vendor/ethers.min.js";
+    import { ABI } from "./abi.js";
+    import { BYTECODE } from "./bytecode.js";
+    import { CONFIG } from "./config.js";
+
+    const $ = (s) => document.querySelector(s);
+    const msg = (el, kind, title, body = "") => (el.innerHTML = `<div class="msg ${kind}"><div class="title">${title}</div>${body ? `<div>${body}</div>` : ""}</div>`);
+    let signer = null;
+
+    if (!window.ethereum) msg($("#who"), "err", "No wallet found", "Open this page in the MetaMask app's browser, or in Chrome with the MetaMask extension.");
+
+    async function switchNetwork() {
+      try {
+        await window.ethereum.request({ method: "wallet_switchEthereumChain", params: [{ chainId: CONFIG.chainIdHex }] });
+      } catch (err) {
+        if (err?.code === 4902 || /unrecognized chain/i.test(err?.message || "")) {
+          await window.ethereum.request({ method: "wallet_addEthereumChain", params: [{
+            chainId: CONFIG.chainIdHex, chainName: CONFIG.chainName, rpcUrls: [CONFIG.rpcUrl],
+            nativeCurrency: { name: "Ether", symbol: "ETH", decimals: 18 }, blockExplorerUrls: [CONFIG.explorer] }] });
+        } else throw err;
+      }
+    }
+
+    $("#connect").addEventListener("click", async () => {
+      try {
+        const provider = new ethers.BrowserProvider(window.ethereum);
+        await provider.send("eth_requestAccounts", []);
+        await switchNetwork();
+        signer = await new ethers.BrowserProvider(window.ethereum).getSigner();
+        const addr = await signer.getAddress();
+        const bal = await signer.provider.getBalance(addr);
+        const net = await signer.provider.getNetwork();
+        const ok = Number(net.chainId) === CONFIG.chainId;
+        msg($("#who"), ok && bal > 0n ? "ok" : "err", ok ? `Connected: ${addr.slice(0, 6)}…${addr.slice(-4)}` : "Wrong network",
+          `${ethers.formatEther(bal).slice(0, 8)} test ETH on ${ok ? CONFIG.chainName : `chain ${net.chainId}`}.${bal === 0n ? " Get free test ETH from the faucet first." : ""}`);
+        $("#deploy").disabled = !ok;
+      } catch (err) {
+        msg($("#who"), "err", "Could not connect", err?.shortMessage || err?.message || String(err));
+      }
+    });
+
+    $("#deploy").addEventListener("click", async () => {
+      $("#deploy").disabled = true;
+      try {
+        msg($("#msg"), "wait", "Confirm in MetaMask…");
+        const contract = await new ethers.ContractFactory(ABI, BYTECODE, signer).deploy();
+        const tx = contract.deploymentTransaction();
+        msg($("#msg"), "wait", "Deploying…", `<a href="${CONFIG.explorer}/tx/${tx.hash}" target="_blank" rel="noopener">Follow it on the explorer</a>`);
+        await contract.waitForDeployment();
+        const address = await contract.getAddress();
+        const app = new URL(`index.html?contract=${address}`, location.href).href;
+        msg($("#msg"), "ok", "Deployed",
+          `Contract address:<br><code id="addr">${address}</code><br><br>
+           <button type="button" id="copy">Copy address</button><br><br>
+           Send this address to your team to put in <code>web/config.js</code>.<br>
+           Until then, use the app with this link: <a href="${app}">${app}</a><br>
+           <a href="${CONFIG.explorer}/address/${address}" target="_blank" rel="noopener">See it on the explorer</a>`);
+        $("#copy").addEventListener("click", () => navigator.clipboard?.writeText(address));
+      } catch (err) {
+        const text = err?.shortMessage || err?.message || String(err);
+        msg($("#msg"), "err", /rejected|denied/i.test(text) ? "Cancelled" : "Deploy failed",
+          /insufficient funds/i.test(text) ? "Not enough test ETH. Use the faucet, then try again." : text);
+        $("#deploy").disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>

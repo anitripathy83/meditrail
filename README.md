@@ -18,9 +18,13 @@ Anyone can scan the QR code on a box and get a plain verdict, with no wallet and
 
 All data is fictional. No real names, no patient data, no real money.
 
-| Check page (phone) | Temperature breach | Seal code handover |
-| --- | --- | --- |
-| ![Genuine](docs/screenshots/check-genuine-phone.png) | ![Breach](docs/screenshots/check-breach-phone.png) | ![Seal](docs/screenshots/company-seal.png) |
+![MediTrail check page](docs/screenshots/hero-desktop.png)
+
+| Check page (phone) | Temperature breach | Seal code handover | Sensor |
+| --- | --- | --- | --- |
+| ![Genuine](docs/screenshots/check-genuine-phone.png) | ![Breach](docs/screenshots/check-breach-phone.png) | ![Seal](docs/screenshots/company-seal.png) | ![Sensor](docs/screenshots/sensor.png) |
+
+Live site: https://meditrail-s4rc.onrender.com
 
 ---
 

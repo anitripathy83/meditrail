@@ -6,12 +6,15 @@
   <title>MediTrail – check your medicine</title>
   <meta name="description" content="Scan a medicine box and see, from the blockchain, whether it is genuine, kept cold and safe to use.">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%230e7c66'/><path d='M13 7h6v6h6v6h-6v6h-6v-6H7v-6h6z' fill='white'/></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700&family=Schibsted+Grotesk:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
   <header class="top">
     <div class="brand">
-      <div class="logo" aria-hidden="true">+</div>
+      <svg class="logo" viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="18" fill="none" stroke="currentColor" stroke-width="2" stroke-dasharray="3 3"/><circle cx="20" cy="20" r="13" fill="currentColor"/><path d="M17.5 13h5v4.5H27v5h-4.5V27h-5v-4.5H13v-5h4.5z" fill="#fff"/></svg>
       <div>
         <div class="brand-name">MediTrail</div>
         <div class="brand-sub">Proof, not promises, for every medicine box</div>
@@ -24,20 +27,79 @@
       <button class="tab" data-view="admin">Regulator</button>
     </nav>
   </header>
-  <div class="banner demo">Hackathon demo on the Base Sepolia test network. Fictional companies and medicines; no real or personal data.</div>
+  <div class="banner demo">Hackathon demo on the Base Sepolia test network. All companies and medicines are fictional, and no personal data is stored.</div>
   <div id="config-warning" class="banner warn" hidden></div>
 
   <main>
     <!-- ============================== CHECK (public) ============================== -->
     <section id="view-check" class="view">
-      <h1>Is this medicine safe?</h1>
-      <p class="lead">Type or scan the code on the box. No wallet or account needed.</p>
-      <form id="check-form" class="row">
-        <label class="sr" for="check-id">Box code</label>
-        <input id="check-id" placeholder="e.g. INS-0001" autocomplete="off" autocapitalize="characters" required>
-        <button class="primary" type="submit">Check</button>
-      </form>
+      <div class="hero">
+        <div class="hero-copy">
+          <h1>Is this medicine safe?</h1>
+          <p class="lead">Scan the code on the box or type it in. You'll see who handled it, how cold it was kept, and whether anyone tried to fake it. No wallet or account needed.</p>
+          <form id="check-form" class="search">
+            <svg class="search-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7V4h3M21 7V4h-3M3 17v3h3M21 17v3h-3M7 12h10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+            <label class="sr" for="check-id">Box code</label>
+            <input id="check-id" placeholder="Box code, e.g. INS-0001" autocomplete="off" autocapitalize="characters" spellcheck="false" required>
+            <button class="primary" type="submit">Check</button>
+          </form>
+          <p class="try">Try a demo box:
+            <button type="button" class="chip" data-demo="INS-0001">INS-0001</button>
+            <button type="button" class="chip" data-demo="INS-0002">INS-0002</button>
+            <button type="button" class="chip" data-demo="FAKE-0000">a fake code</button>
+          </p>
+        </div>
+        <figure class="hero-art" aria-hidden="true">
+          <svg viewBox="0 0 360 330">
+            <defs>
+              <linearGradient id="beam" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" stop-color="#2bb3d6" stop-opacity="0"/>
+                <stop offset=".85" stop-color="#2bb3d6" stop-opacity=".28"/>
+                <stop offset="1" stop-color="#2bb3d6" stop-opacity=".9"/>
+              </linearGradient>
+              <pattern id="hatch" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="3" height="6" fill="#c9d7df"/></pattern>
+              <clipPath id="boxclip"><rect x="80" y="44" width="200" height="252" rx="16"/></clipPath>
+            </defs>
+            <ellipse cx="180" cy="312" rx="120" ry="9" class="art-shadow"/>
+            <g class="art-box">
+              <rect x="80" y="44" width="200" height="252" rx="16" class="art-paper"/>
+              <g clip-path="url(#boxclip)"><rect x="80" y="44" width="200" height="66" class="art-band"/></g>
+              <text x="100" y="78" class="art-title">Insulin glargine</text>
+              <text x="100" y="97" class="art-sub">100 U/ml, 5 pre-filled pens</text>
+              <rect x="246" y="34" width="22" height="100" rx="4" fill="url(#hatch)" class="art-seal"/>
+              <g transform="translate(100,130)" class="art-qr"><rect x="0" y="0" width="8" height="8"/><rect x="8" y="0" width="8" height="8"/><rect x="16" y="0" width="8" height="8"/><rect x="24" y="0" width="8" height="8"/><rect x="40" y="0" width="8" height="8"/><rect x="48" y="0" width="8" height="8"/><rect x="56" y="0" width="8" height="8"/><rect x="64" y="0" width="8" height="8"/><rect x="0" y="8" width="8" height="8"/><rect x="8" y="8" width="8" height="8"/><rect x="16" y="8" width="8" height="8"/><rect x="24" y="8" width="8" height="8"/><rect x="40" y="8" width="8" height="8"/><rect x="48" y="8" width="8" height="8"/><rect x="56" y="8" width="8" height="8"/><rect x="64" y="8" width="8" height="8"/><rect x="0" y="16" width="8" height="8"/><rect x="8" y="16" width="8" height="8"/><rect x="16" y="16" width="8" height="8"/><rect x="24" y="16" width="8" height="8"/><rect x="40" y="16" width="8" height="8"/><rect x="48" y="16" width="8" height="8"/><rect x="56" y="16" width="8" height="8"/><rect x="64" y="16" width="8" height="8"/><rect x="8" y="24" width="8" height="8"/><rect x="32" y="24" width="8" height="8"/><rect x="48" y="24" width="8" height="8"/><rect x="56" y="24" width="8" height="8"/><rect x="64" y="24" width="8" height="8"/><rect x="8" y="32" width="8" height="8"/><rect x="16" y="32" width="8" height="8"/><rect x="32" y="32" width="8" height="8"/><rect x="40" y="32" width="8" height="8"/><rect x="64" y="32" width="8" height="8"/><rect x="32" y="40" width="8" height="8"/><rect x="48" y="40" width="8" height="8"/><rect x="56" y="40" width="8" height="8"/><rect x="0" y="48" width="8" height="8"/><rect x="8" y="48" width="8" height="8"/><rect x="16" y="48" width="8" height="8"/><rect x="56" y="48" width="8" height="8"/><rect x="0" y="56" width="8" height="8"/><rect x="8" y="56" width="8" height="8"/><rect x="16" y="56" width="8" height="8"/><rect x="40" y="56" width="8" height="8"/><rect x="56" y="56" width="8" height="8"/><rect x="0" y="64" width="8" height="8"/><rect x="8" y="64" width="8" height="8"/><rect x="16" y="64" width="8" height="8"/><rect x="24" y="64" width="8" height="8"/><rect x="32" y="64" width="8" height="8"/><rect x="48" y="64" width="8" height="8"/><rect x="56" y="64" width="8" height="8"/><rect x="64" y="64" width="8" height="8"/><rect x="8" y="8" width="8" height="8" fill="#fff"/><rect x="56" y="8" width="8" height="8" fill="#fff"/><rect x="8" y="56" width="8" height="8" fill="#fff"/></g>
+              <text x="190" y="142" class="art-k">Box</text>
+              <text x="190" y="160" class="art-v">INS-0001</text>
+              <text x="190" y="182" class="art-k">Batch</text>
+              <text x="190" y="200" class="art-v">B-2611</text>
+              <text x="100" y="236" class="art-k">Store between</text>
+              <rect x="100" y="246" width="160" height="10" rx="5" class="art-track"/>
+              <rect x="156" y="246" width="48" height="10" rx="5" class="art-safe"/>
+              <text x="156" y="276" class="art-k" text-anchor="middle">2 °C</text>
+              <text x="204" y="276" class="art-k" text-anchor="middle">8 °C</text>
+            </g>
+            <g clip-path="url(#boxclip)"><rect class="art-beam" x="80" y="0" width="200" height="44" fill="url(#beam)"/></g>
+            <g class="art-stamp" transform="translate(286 262)">
+              <g class="art-stamp-inner">
+                <circle r="46" class="stamp-fill"/>
+                <circle r="38" class="stamp-ring"/>
+                <path d="M-15 1 l10 10 l21 -22" class="stamp-check"/>
+                <text y="30" text-anchor="middle" class="stamp-text">signed</text>
+              </g>
+            </g>
+          </svg>
+        </figure>
+      </div>
       <div id="check-result" aria-live="polite"></div>
+      <section class="defences" aria-labelledby="defences-h">
+        <h2 id="defences-h">Why a result here is hard to fake</h2>
+        <ul>
+          <li><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M4 18l6-6 5 3 5-5 8 8M10 12v12M22 10v14" /></svg><strong>Both companies sign each handover</strong><span>A box changes hands only when the receiver accepts it with its own wallet.</span></li>
+          <li><svg viewBox="0 0 32 32" aria-hidden="true"><rect x="6" y="13" width="20" height="14" rx="3"/><path d="M11 13V9a5 5 0 0110 0v4M16 19v3"/></svg><strong>A code sealed inside the package</strong><span>The receiver has to type it, so nobody can claim a box they never held.</span></li>
+          <li><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M13 5a3 3 0 016 0v13a6 6 0 11-6 0z"/><path d="M16 12v10"/></svg><strong>The sensor signs the temperature</strong><span>The carrier passes readings on but can't change them. Above 8 °C the box is blocked.</span></li>
+          <li><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M8 4h11l6 6v18H8z M19 4v6h6"/><path d="M12 18l3 3 6-6"/></svg><strong>Certificates checked by fingerprint</strong><span>Choose the lab PDF and your browser confirms it is the manufacturer's original.</span></li>
+        </ul>
+      </section>
     </section>
 
     <!-- ============================== COMPANY ============================== -->
@@ -46,8 +108,9 @@
       <p class="lead">Manufacturers, distributors and pharmacies record each step with their own wallet. The contract decides what is allowed.</p>
       <div class="wallet-slot"></div>
 
-      <div class="card" id="card-register">
-        <h2>1. Register a box <span class="tag">Manufacturer</span></h2>
+      <ol class="rail">
+      <li><div class="card" id="card-register">
+        <h2>Register a box <span class="tag">Manufacturer</span></h2>
         <form id="reg-form">
           <div class="grid">
             <label class="field">Box code<input id="reg-id" placeholder="INS-0001" required></label>
@@ -64,8 +127,9 @@
         <div id="reg-qr"></div>
       </div>
 
-      <div class="card" id="card-offer">
-        <h2>2. Hand a box over <span class="tag">Current holder</span></h2>
+      </li>
+      <li><div class="card" id="card-offer">
+        <h2>Hand a box over <span class="tag">Current holder</span></h2>
         <p class="hint">Pick the next company. The page creates a one-time seal code: put it inside the tamper seal. Only someone holding the box can read it.</p>
         <form id="offer-form">
           <div class="grid">
@@ -79,8 +143,9 @@
         <div id="offer-seal"></div>
       </div>
 
-      <div class="card" id="card-accept">
-        <h2>3. Receive a box <span class="tag">Next company</span></h2>
+      </li>
+      <li><div class="card" id="card-accept">
+        <h2>Receive a box <span class="tag">Next company</span></h2>
         <p class="hint">Open the tamper seal and type the code you find inside. A wrong code, or the wrong company, is refused.</p>
         <form id="accept-form">
           <div class="grid">
@@ -97,15 +162,17 @@
         <div id="accept-msg"></div>
       </div>
 
-      <div class="card" id="card-sell">
-        <h2>4. Sell to a customer <span class="tag">Pharmacy</span></h2>
+      </li>
+      <li><div class="card" id="card-sell">
+        <h2>Sell to a customer <span class="tag">Pharmacy</span></h2>
         <p class="hint">Each box can be sold once. If the same code turns up again, the check page warns it may be a copy. No customer data is stored.</p>
         <form id="sell-form" class="row">
           <input id="sell-id" placeholder="INS-0001" required aria-label="Box code">
           <button class="primary" type="submit">Sell box</button>
         </form>
         <div id="sell-msg"></div>
-      </div>
+      </div></li>
+      </ol>
 
       <details class="card">
         <summary>More: corrections and recalls</summary>
@@ -159,9 +226,16 @@
         <h2>Sign a reading</h2>
         <form id="sensor-form">
           <label class="field">Box code<input id="sensor-box" placeholder="INS-0001" required></label>
-          <label class="field">Temperature: <output id="sensor-temp-out">5.0 °C</output>
+          <div class="gauge" id="gauge" data-state="ok">
+            <div class="gauge-read"><output id="sensor-temp-out" for="sensor-temp">5.0 °C</output><span id="gauge-state">Inside the safe range</span></div>
+            <div class="gauge-scale">
+              <div class="gauge-band"></div>
+              <div class="gauge-marker" id="gauge-marker"></div>
+            </div>
+            <div class="gauge-ticks"><span style="left:0%">−5 °C</span><span style="left:35%">2 °C</span><span style="left:65%">8 °C</span><span style="left:100%">15 °C</span></div>
+            <label class="sr" for="sensor-temp">Temperature</label>
             <input id="sensor-temp" type="range" min="-5" max="15" step="0.1" value="5.0">
-          </label>
+          </div>
           <div class="actions">
             <button type="button" data-temp="4.6">Normal 4.6 °C</button>
             <button type="button" data-temp="11.2" class="danger">Heat 11.2 °C</button>
@@ -213,7 +287,7 @@
   </main>
 
   <footer class="foot">
-    <span>MediTrail · HASH IT OUT 2026 · Track 2: Supply Chain</span>
+    <span>MediTrail, built for HASH IT OUT 2026, Track 2: Supply Chain</span>
     <span id="contract-link"></span>
   </footer>
 

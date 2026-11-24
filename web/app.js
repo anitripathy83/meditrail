@@ -288,6 +288,18 @@ function tempChart(rows) {
     <text x="${L}" y="${H - 6}">first reading</text><text x="${W - R}" y="${H - 6}" text-anchor="end">latest</text></svg>`;
 }
 
+const ICON_PATH = {
+  "v-good": "M31 51 l12 12 l26 -27",
+  "v-warn": "M50 27 v29 M50 72 v1",
+  "v-bad": "M35 35 L65 65 M65 35 L35 65",
+  "v-info": "M27 50 h40 m-14 -14 l14 14 l-14 14",
+};
+function verdictHtml(cls, word, text) {
+  return `<div class="verdict ${cls}">
+    <svg class="verdict-icon" viewBox="0 0 100 100" aria-hidden="true"><circle class="fill" cx="50" cy="50" r="45"/><circle class="ring" cx="50" cy="50" r="37"/><path d="${ICON_PATH[cls] || ""}"/></svg>
+    <div><div class="word">${word}</div><p>${text}</p></div></div>`;
+}
+
 const KIND_CLASS = { Registered: "made", Offered: "offered", Received: "received", Rejected: "rejected",
   "Temperature breach": "breach", Sold: "sold", Recalled: "recalled", Correction: "correction" };
 
@@ -304,7 +316,7 @@ async function checkBox(rawId) {
     const verdict = Number(v);
     if (verdict === 0) {
       const [cls, word, text] = verdictCard(0);
-      out.innerHTML = `<div class="verdict ${cls}"><div class="word">${word}</div><p>${text}</p></div>`;
+      out.innerHTML = `${verdictHtml(cls, word, text)}`;
       return;
     }
     const [history, readings, recall] = await Promise.all([reader.getHistory(id), reader.getReadings(id), reader.getRecall(box.batch)]);
@@ -312,7 +324,7 @@ async function checkBox(rawId) {
     const [cls, word, text] = verdictCard(verdict, box, history, recall);
     const holderText = box.pendingTo !== ZERO ? `${who(box.holder)} → ${who(box.pendingTo)} (waiting)` : who(box.holder);
     out.innerHTML = `
-      <div class="verdict ${cls}"><div class="word">${word}</div><p>${text}</p></div>
+      ${verdictHtml(cls, word, text)}
       <div class="facts">
         <div class="fact"><div class="k">Medicine</div><div class="v">${esc(box.medicine)}</div></div>
         <div class="fact"><div class="k">Box · batch</div><div class="v">${esc(box.id)} · ${esc(box.batch)}</div></div>
@@ -343,6 +355,7 @@ async function checkBox(rawId) {
         </ul></details>
       <div class="qr"><img src="${qrImg(checkUrl(id))}" alt="QR code to check ${esc(id)}"><span class="hint">This QR code opens this check page for ${esc(id)}.</span></div>`;
     $("#cert-file").addEventListener("change", (ev) => checkCertificate(id, ev.target.files[0]));
+    out.scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "start" });
   } catch (err) {
     const e = friendlyError(err);
     showMsg(out, "err", e.title, e.body);
@@ -362,11 +375,15 @@ async function checkCertificate(id, file) {
     ok ? `This is exactly the certificate registered for ${esc(id)}.` : "This file was altered, or it is not the certificate registered for this box.");
 }
 
+$$("[data-demo]").forEach((b) => b.addEventListener("click", () => checkBox(b.dataset.demo)));
 $("#check-form").addEventListener("submit", (ev) => { ev.preventDefault(); checkBox($("#check-id").value); });
 
 // ------------------------------------------------------------------ COMPANY
 
 function fillSelects() {
+  // Keep whatever the user already picked when the lists refresh in the background.
+  const keepSensor = $("#reg-sensor").value;
+  const keepTo = $("#offer-to").value;
   const sensors = activeMembers(4);
   $("#reg-sensor").innerHTML = sensors.length
     ? sensors.map((m) => `<option value="${m.address}">${esc(m.name)} (${short(m.address)})</option>`).join("")
@@ -375,6 +392,8 @@ function fillSelects() {
   const companies = activeMembers().filter((m) => m.role !== 4 && !same(m.address, wallet.account));
   $("#offer-to").innerHTML = companies.map((m) => `<option value="${m.address}">${esc(m.name)} · ${ROLE[m.role]}</option>`).join("")
     || `<option value="">No approved companies yet</option>`;
+  if (keepSensor && [...$("#reg-sensor").options].some((o) => o.value === keepSensor)) $("#reg-sensor").value = keepSensor;
+  if (keepTo && [...$("#offer-to").options].some((o) => o.value === keepTo)) $("#offer-to").value = keepTo;
 }
 
 $("#reg-cert").addEventListener("change", async (ev) => {
@@ -501,9 +520,17 @@ $("#sensor-new").addEventListener("click", () => {
   renderSensor();
 });
 const tempInput = $("#sensor-temp");
-const showTemp = () => ($("#sensor-temp-out").textContent = `${Number(tempInput.value).toFixed(1)} °C`);
+function showTemp() {
+  const t = Number(tempInput.value);
+  const bad = t < 2 || t > 8;
+  $("#sensor-temp-out").textContent = `${t.toFixed(1)} °C`;
+  $("#gauge").dataset.state = bad ? "bad" : "ok";
+  $("#gauge").style.setProperty("--t", `${((t + 5) / 20) * 100}%`);
+  $("#gauge-state").textContent = bad ? (t > 8 ? "Too warm: this reading will block the box" : "Too cold: this reading will block the box") : "Inside the safe range";
+}
 tempInput.addEventListener("input", showTemp);
 $$("[data-temp]").forEach((b) => b.addEventListener("click", () => { tempInput.value = b.dataset.temp; showTemp(); }));
+showTemp();
 
 $("#sensor-form").addEventListener("submit", async (ev) => {
   ev.preventDefault();
