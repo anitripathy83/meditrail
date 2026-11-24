@@ -176,7 +176,7 @@ if (window.ethereum?.on) {
 }
 
 /** Simulate first (free, instant refusal), then send through MetaMask and wait. */
-async function send(fn, args, msgEl, okTitle, okBody = "") {
+async function send(fn, args, msgEl, okTitle, okBody = "", onSent = null) {
   if (!configured) return showMsg(msgEl, "err", "No contract yet", "Set the contract address in web/config.js first.");
   if (!wallet.writer) {
     await connect();
@@ -189,6 +189,7 @@ async function send(fn, args, msgEl, okTitle, okBody = "") {
     await wallet.writer[fn].staticCall(...args);
     showMsg(msgEl, "wait", "Confirm in MetaMask…", "The contract accepted the check. Approve the transaction to record it.");
     const tx = await wallet.writer[fn](...args);
+    if (onSent) onSent(tx);
     showMsg(msgEl, "wait", "Recording on the blockchain…", txLink(tx.hash, "Follow it on the explorer"));
     await tx.wait();
     txLog.unshift({ hash: tx.hash, what: okTitle, time: new Date() });
@@ -450,14 +451,19 @@ $("#offer-form").addEventListener("submit", async (ev) => {
   const to = $("#offer-to").value;
   const code = newSealCode();
   $("#offer-seal").innerHTML = "";
-  const tx = await send("offer", [id, to, ethers.id(code), $("#offer-note").value.trim()],
-    "#offer-msg", `Box ${id} offered to ${who(to)}`, `It stays your responsibility until they accept it.`);
-  if (tx) {
+  // Show the code as soon as the transaction is sent, so a slow or failed confirmation
+  // can never lose a code whose fingerprint is already on its way to the chain.
+  const showSeal = () => {
     $("#offer-seal").innerHTML = `<div class="seal">
       <div class="hint">One-time seal code for ${esc(id)} → ${esc(who(to))}</div>
       <div class="seal-code" id="seal-code">${code}</div>
       <div class="hint">Print it, put it <strong>inside</strong> the tamper seal, then close the package. Do not send it by message. Only its fingerprint is on the blockchain.</div>
       <div class="actions"><button type="button" onclick="window.print()">Print seal slip</button></div></div>`;
+  };
+  const tx = await send("offer", [id, to, ethers.id(code), $("#offer-note").value.trim()],
+    "#offer-msg", `Box ${id} offered to ${who(to)}`, `It stays your responsibility until they accept it.`, showSeal);
+  if (!tx && $("#seal-code")) {
+    $("#offer-seal .hint").insertAdjacentHTML("afterend", `<div class="hint"><strong>Keep this code.</strong> The hand-over was sent but not yet confirmed: check the box on the Check a box tab. If it shows as offered, this is its code.</div>`);
   }
 });
 
