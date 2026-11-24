@@ -35,6 +35,7 @@ expiry; recalls by anyone but the regulator or the batch's maker; corrections by
 Open https://meditrail-s4rc.onrender.com. The *Check a box* tab needs no wallet: try `INS-0001`.
 To record steps: MetaMask on Base Sepolia → *Company* tab → Connect. Contract: [0x93d65cDAFeA8856608d2Ce1eB05326A5C159EF87](https://sepolia.basescan.org/address/0x93d65cDAFeA8856608d2Ce1eB05326A5C159EF87) on Base Sepolia.
 Demo transactions: register INS-0001 [0x29669a5bc4a7b27d81cfa2fb13304ecf9bddb5926b48d3a2787fd2a7629cd56e](https://sepolia.basescan.org/tx/0x29669a5bc4a7b27d81cfa2fb13304ecf9bddb5926b48d3a2787fd2a7629cd56e); accept INS-0001 with its seal code [0x115130143f3234fa29734e9f32b36f04061922dcd3c98b373c1f87429ed1bf5a](https://sepolia.basescan.org/tx/0x115130143f3234fa29734e9f32b36f04061922dcd3c98b373c1f87429ed1bf5a).
+(MetaMask may relay a step through its smart-account service, so Basescan can show "Redeem Delegations" as the action: the MediTrail event for that step is in the transaction's Logs tab, emitted by the contract above.)
 Local: `cd web && python -m http.server 8000`. Tests: `python -m pytest test/ -q` (20) and `npm run e2e` (33 checks).
 
 **6. Path to real life**
